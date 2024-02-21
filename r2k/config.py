@@ -1,29 +1,38 @@
-from dataclasses import asdict, dataclass, field, fields
-from typing import Any, List, Optional
+import datetime
+from typing import List, Optional
 
-import yaml
+from pydantic import BaseModel, ConfigDict, Field, fields
 
-from .cli import logger
+# from .cli import logger
 from .constants import Parser
 
 
-@dataclass
-class Config:
+class LocalFeed(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    url: str
+    updated: Optional[datetime.datetime] = None
+
+
+class Config(BaseModel):
     """Global configuration for the project"""
 
-    feeds: dict
-    password: str
-    kindle_address: str
-    send_from: str
-    send_to: str = field(init=False, default="")
+    feeds: dict[str, LocalFeed] = Field(default_factory=dict)
+    # TODO: Instead read from a file
+    # Or use SecretStr: https://docs.pydantic.dev/latest/examples/secrets/
+    password: str = ""
+    kindle_address: str = ""
+    send_from: str = ""
+    send_to: str = Field(init=False, default="")
     parser: Parser = Parser.READABILITY
 
     # Internal properties not accessible outside the class
-    _path: str = field(init=False, repr=False)
-    _loaded: bool = field(init=False, repr=False, default=False)
+    _path: Optional[str] = fields.PrivateAttr(default=None)
+    _loaded: bool = fields.PrivateAttr(default=False)
 
     def __post_load__(self) -> None:
         """Tasks to perform after loading the config from the YAML"""
+
         self._loaded = True
         if self.parser == Parser.PUSH_TO_KINDLE:
             kindle_address = self.kindle_address.split("@")[0]
@@ -35,41 +44,31 @@ class Config:
         """Load configurations from a YAML file"""
         self._path = path
 
-        logger.debug(f"Loading config from {self._path}")
+        # logger.debug(f"Loading config from {self._path}")
         with open(self._path) as f:
-            file_config = yaml.safe_load(f)
+            file_content = f.read()
+            file_config = Config.model_validate_json(file_content)
 
         self.__dict__.update(file_config)
         self.__post_load__()
 
-    def __setattr__(self, key: str, value: Any) -> None:
-        """Override in order to allow dumping changes to file"""
-        super().__setattr__(key, value)
-        self.save()
-
     def save(self, path: Optional[str] = None) -> None:
         """Dump the contents of the internal dict to file"""
-        if not self._loaded:
-            return
-
-        if not self._path:
+        if self._path is None:
             if path:
                 self._path = path
             else:
                 raise FileNotFoundError("Path not set in Config. Need to run config.load before running config.save")
 
         with open(self._path, "w") as f:
-            yaml.safe_dump(self.as_dict(), f, default_flow_style=False)
-
-    def as_dict(self) -> dict:
-        """Return the underlying dict"""
-        return asdict(self)
+            json_dump = self.model_dump_json(indent=2)
+            f.write(json_dump)
 
     @classmethod
     def fields(cls) -> List[str]:
         """Return a list with all the publicly exposed fields of the Config class"""
         # Ignoring mypy typing validation here, as for some reason it assumes that f.type is always Field, but it isn't
-        return [f.name for f in fields(cls) if issubclass(f.type, (str, Parser)) and not f.name.startswith("_")]
+        return list(cls.__fields__.keys())
 
 
-config = Config(feeds={}, kindle_address="", password="", send_from="")
+config = Config()

@@ -9,7 +9,7 @@ def test_read_config(tmp_path):
         "send_from": "test@gmail.com"
     }
     """
-    config_file = tmp_path / "config.yml"
+    config_file = tmp_path / "config.json"
     config_file.write_text(config_contents)
 
     config = Config()

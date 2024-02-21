@@ -1,12 +1,12 @@
 import os
+from datetime import datetime, UTC
 import sys
 from typing import List
 
-import arrow
 import click
 
 from r2k.cli import cli_utils, logger
-from r2k.config import config
+from r2k.config import config, LocalFeed
 from r2k.constants import ARTICLE_EBOOK_LIMIT, Parser
 from r2k.dates import get_pretty_date_str, now
 from r2k.ebook.epub_builder import create_epub
@@ -71,21 +71,21 @@ def send_articles_for_feed(feed_title: str) -> None:
     unread_articles = get_unread_articles_for_feed(local_feed, feed_title)
     send_updates(unread_articles, feed_title)
 
-    local_feed["updated"] = arrow.utcnow()
+    local_feed.updated = datetime.now(UTC)
     config.save()
 
 
-def get_unread_articles_for_feed(local_feed: dict, feed_title: str) -> List[Article]:
+def get_unread_articles_for_feed(local_feed: LocalFeed, feed_title: str) -> List[Article]:
     """Find the all new articles for a certain feed"""
-    rss_feed = Feed(local_feed["url"], feed_title)
-    last_updated = local_feed.get("updated")
+    rss_feed = Feed(local_feed.url, feed_title)
+    last_updated = local_feed.updated
     return rss_feed.get_unread_articles(last_updated)
 
 
-def get_local_feed(feed_title: str) -> dict:
+def get_local_feed(feed_title: str) -> LocalFeed:
     """Get the feed if it exists in the feeds dict, or exit with an error"""
     feed = config.feeds.get(feed_title)
-    if not feed:
+    if feed is None:
         logger.error(f"Tried to fetch articles from an unknown feed `{feed_title}`")
         sys.exit(1)
     return feed
