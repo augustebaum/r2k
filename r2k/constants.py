@@ -20,7 +20,7 @@ ARTICLE_EBOOK_LIMIT = 20
 
 
 class Parser(Enum):
-    """A convenience class to represent the available parsing options"""
+    """A HTML-to-Kindle parser."""
 
     PUSH_TO_KINDLE = "pushtokindle"
     MERCURY = "mercury"

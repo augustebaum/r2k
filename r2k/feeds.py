@@ -18,8 +18,7 @@ class Article(feedparser.FeedParserDict):
 
     def get_raw_date(self: feedparser.FeedParserDict) -> str:
         """Return the raw string date as set up in the entry"""
-        default = str(arrow.now().shift(days=-30))
-        return self.get("published") or self.get("updated") or default
+        return self.get("published") or self.get("updated") or str(arrow.now().shift(days=-30))
 
     def get_str_date(self: feedparser.FeedParserDict) -> str:
         """Return a nicely formatted string from the date in the entry"""
@@ -62,7 +61,7 @@ class Feed(feedparser.FeedParserDict):
             * if this is the first time r2k is running for this feed, by asking the user which was the last article
             from the feed that they have already read, and only sending them the ones that came after
         """
-        if last_updated:
+        if last_updated is not None:
             unread_articles = self.find_unread_articles_from_date(last_updated)
         else:
             unread_articles = self.find_unread_articles_from_user()

@@ -136,9 +136,6 @@ class EPUB:
     """
 
     def __init__(self, articles: List[EPUBArticle], title: str, epub_path: str):
-        """
-        Constructor
-        """
         self.articles = articles
         self.title = title
         self.id = normalize_str(self.title)

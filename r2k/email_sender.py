@@ -56,7 +56,10 @@ def set_content(msg: EmailMessage, title: str, url: Optional[str], attachment_pa
         logger.debug(f"Setting attachment for {title}")
         with open(attachment_path, "rb") as f:
             msg.add_attachment(
-                f.read(), maintype="text", subtype=f'html; charset=utf-8; name="{filename}"', filename=filename,
+                f.read(),
+                maintype="text",
+                subtype=f'html; charset=utf-8; name="{filename}"',
+                filename=filename,
             )
     elif url:
         logger.debug(f"Setting email content to {url}")

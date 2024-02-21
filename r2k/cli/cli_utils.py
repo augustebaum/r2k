@@ -67,7 +67,12 @@ def force_option(help_text: str) -> Callable:
 
     def decorator(f: Callable) -> Callable:
         option = click.option(
-            "--force", default=False, show_default=True, is_flag=True, type=click.types.BOOL, help=help_text,
+            "--force",
+            default=False,
+            show_default=True,
+            is_flag=True,
+            type=click.types.BOOL,
+            help=help_text,
         )
         return option(f)
 

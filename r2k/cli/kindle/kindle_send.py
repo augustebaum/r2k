@@ -25,7 +25,11 @@ from r2k.feeds import Article, Feed
     help="Title of a (optional) feed. If not passed, updates for all feeds will be sent",
 )
 @click.option(
-    "-u", "--url", type=str, required=False, help="URL of an article to send to the Kindle",
+    "-u",
+    "--url",
+    type=str,
+    required=False,
+    help="URL of an article to send to the Kindle",
 )
 def kindle_send(feed_title: str, url: str) -> None:
     """Send updates from one or all feeds (or a single article)."""
